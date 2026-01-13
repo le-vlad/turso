@@ -430,6 +430,42 @@ fn update_pragma(
             connection.set_foreign_keys_enabled(enabled);
             Ok((program, TransactionMode::None))
         }
+        #[cfg(feature = "cdc_nats")]
+        PragmaName::ChangeDataCaptureSink => {
+            let value_str = parse_string(&value)?;
+
+            // Check for 'off' to disable the sink
+            if value_str.eq_ignore_ascii_case("off") {
+                connection
+                    .set_cdc_sink(None)
+                    .map_err(|e| LimboError::InvalidArgument(e.to_string()))?;
+                return Ok((program, TransactionMode::None));
+            }
+
+            // Parse format: 'sink_type,url,subject'
+            let parts: Vec<&str> = value_str.split(',').map(|s| s.trim()).collect();
+            if parts.len() != 3 {
+                bail_parse_error!(
+                    "Expected 'sink_type,url,subject' or 'off', got: {}",
+                    value_str
+                );
+            }
+
+            let config = crate::cdc::CdcSinkConfig::parse(parts[0], parts[1], parts[2])
+                .map_err(|e| LimboError::InvalidArgument(e.to_string()))?;
+
+            connection
+                .set_cdc_sink(Some(config))
+                .map_err(|e| LimboError::InvalidArgument(e.to_string()))?;
+
+            Ok((program, TransactionMode::None))
+        }
+        #[cfg(not(feature = "cdc_nats"))]
+        PragmaName::ChangeDataCaptureSink => {
+            bail_parse_error!(
+                "CDC sink support not available. Compile with 'cdc_nats' feature."
+            );
+        }
     }
 }
 
@@ -803,6 +839,23 @@ fn query_pragma(
             let enabled = connection.foreign_keys_enabled();
             let register = program.alloc_register();
             program.emit_int(enabled as i64, register);
+            program.emit_result_row(register, 1);
+            program.add_pragma_result_column(pragma.to_string());
+            Ok((program, TransactionMode::None))
+        }
+        #[cfg(feature = "cdc_nats")]
+        PragmaName::ChangeDataCaptureSink => {
+            let sink_info = connection.get_cdc_sink_info();
+            let register = program.alloc_register();
+            program.emit_string8(sink_info, register);
+            program.emit_result_row(register, 1);
+            program.add_pragma_result_column(pragma.to_string());
+            Ok((program, TransactionMode::None))
+        }
+        #[cfg(not(feature = "cdc_nats"))]
+        PragmaName::ChangeDataCaptureSink => {
+            let register = program.alloc_register();
+            program.emit_string8("not available".to_string(), register);
             program.emit_result_row(register, 1);
             program.add_pragma_result_column(pragma.to_string());
             Ok((program, TransactionMode::None))

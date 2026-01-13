@@ -2,6 +2,7 @@
 extern crate core;
 mod assert;
 pub mod busy;
+pub mod cdc;
 mod connection;
 mod error;
 mod ext;
@@ -777,6 +778,8 @@ impl Database {
             fk_pragma: AtomicBool::new(false),
             fk_deferred_violations: AtomicIsize::new(0),
             vtab_txn_states: RwLock::new(HashSet::new()),
+            #[cfg(feature = "cdc_nats")]
+            cdc_sink: RwLock::new(None),
         });
         self.n_connections
             .fetch_add(1, crate::sync::atomic::Ordering::SeqCst);

@@ -155,6 +155,10 @@ pub fn pragma_for(pragma: &PragmaName) -> Pragma {
             PragmaFlags::NoColumns1 | PragmaFlags::Result0,
             &["cache_spill"],
         ),
+        PragmaName::ChangeDataCaptureSink => Pragma::new(
+            PragmaFlags::NoColumns1 | PragmaFlags::Result0,
+            &["change_data_capture_sink"],
+        ),
     }
 }
 

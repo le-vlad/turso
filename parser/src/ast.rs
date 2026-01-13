@@ -1518,6 +1518,11 @@ pub enum PragmaName {
     WalCheckpoint,
     /// Sets or queries the threshold (in bytes) at which MVCC triggers an automatic checkpoint.
     MvccCheckpointThreshold,
+    /// Configure CDC streaming sink.
+    /// Usage: PRAGMA change_data_capture_sink('sink_type,url,subject')
+    /// Example: PRAGMA change_data_capture_sink('nats,nats://localhost:4222,cdc.events')
+    /// Disable: PRAGMA change_data_capture_sink('off')
+    ChangeDataCaptureSink,
 }
 
 /// `CREATE TRIGGER` time

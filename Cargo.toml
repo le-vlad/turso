@@ -98,6 +98,8 @@ similar-asserts = { version = "1.7.0" }
 bitmaps = { version = "3.2.1", default-features = false }
 console-subscriber = { version = "0.4.1" }
 either = { version = "1.15" }
+async-nats = { version = "0.40" }
+base64 = { version = "0.22" }
 divan = "0.1.21"
 
 # Multi threading testing

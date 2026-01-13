@@ -1406,6 +1406,24 @@ pub enum Insn {
     HashClose {
         hash_table_id: usize,
     },
+
+    /// Publish CDC event to configured sink (fire-and-forget).
+    /// This instruction reads CDC data from registers and publishes to the streaming sink.
+    /// If no sink is configured, this is a no-op.
+    ///
+    /// Register layout starting at start_reg:
+    /// - start_reg + 0: change_time (INTEGER)
+    /// - start_reg + 1: change_type (INTEGER: 1=INSERT, 0=UPDATE, -1=DELETE)
+    /// - start_reg + 2: table_name (TEXT)
+    /// - start_reg + 3: id (ANY - primary key/rowid of changed row)
+    /// - start_reg + 4: before (BLOB or NULL)
+    /// - start_reg + 5: after (BLOB or NULL)
+    /// - start_reg + 6: updates (BLOB or NULL)
+    #[cfg(feature = "cdc_nats")]
+    CdcPublish {
+        /// Starting register containing CDC data (change_time, change_type, etc.)
+        start_reg: usize,
+    },
 }
 
 const fn get_insn_virtual_table() -> [InsnFunction; InsnVariants::COUNT] {
@@ -1593,6 +1611,8 @@ impl InsnVariants {
             InsnVariants::HashProbe => execute::op_hash_probe,
             InsnVariants::HashNext => execute::op_hash_next,
             InsnVariants::HashClose => execute::op_hash_close,
+            #[cfg(feature = "cdc_nats")]
+            InsnVariants::CdcPublish => execute::op_cdc_publish,
         }
     }
 }

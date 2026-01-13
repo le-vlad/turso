@@ -3330,6 +3330,15 @@ pub fn emit_cdc_insns(
         flag: InsertFlags::new(),
         table_name: "".to_string(),
     });
+
+    // Emit CdcPublish instruction to stream CDC event to configured sink (if any).
+    // The start_reg points to change_time (turso_cdc_registers + 1), and subsequent
+    // registers contain change_type, table_name, id, before, after, updates.
+    #[cfg(feature = "cdc_nats")]
+    program.emit_insn(Insn::CdcPublish {
+        start_reg: turso_cdc_registers + 1,
+    });
+
     Ok(())
 }
 /// Initialize the limit/offset counters and registers.

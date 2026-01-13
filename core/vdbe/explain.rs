@@ -2021,6 +2021,16 @@ pub fn insn_to_row(
             0,
             String::new(),
         ),
+        #[cfg(feature = "cdc_nats")]
+        Insn::CdcPublish { start_reg } => (
+            "CdcPublish",
+            *start_reg as i64,
+            0,
+            0,
+            Value::build_text(""),
+            0,
+            format!("publish CDC event from r[{start_reg}]"),
+        ),
     }
 }
 

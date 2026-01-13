@@ -89,6 +89,9 @@ pub struct Connection {
     pub(crate) fk_deferred_violations: AtomicIsize,
     /// Track when each virtual table instance is currently in transaction.
     pub(crate) vtab_txn_states: RwLock<HashSet<u64>>,
+    /// CDC streaming sink (optional, feature-gated)
+    #[cfg(feature = "cdc_nats")]
+    cdc_sink: RwLock<Option<Arc<dyn cdc::CdcSink>>>,
 }
 
 // SAFETY: This needs to be audited for thread safety.
